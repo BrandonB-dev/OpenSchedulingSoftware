@@ -6,6 +6,7 @@ import { useAccountStore } from '../stores/useAccountStore'
 import { useNotificationStore } from '../stores/useNotificationStore'
 import { useJobStore } from '../stores/useJobStore'
 import { useCategoryStore } from '../stores/useCategoryStore'
+import { useExpenseStore } from '../stores/useExpenseStore'
 
 export function resetStores(): void {
   useClientStore.setState(useClientStore.getInitialState(), true)
@@ -16,5 +17,6 @@ export function resetStores(): void {
   useNotificationStore.setState(useNotificationStore.getInitialState(), true)
   useJobStore.setState(useJobStore.getInitialState(), true)
   useCategoryStore.setState(useCategoryStore.getInitialState(), true)
+  useExpenseStore.setState(useExpenseStore.getInitialState(), true)
   localStorage.clear()
 }

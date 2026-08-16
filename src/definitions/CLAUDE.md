@@ -11,3 +11,4 @@ TypeScript type definitions (interfaces) for the app's core domain models. No lo
 - **backupData.ts** — `BackupData` interface: the shape of a full data export/backup, aggregating `Appointment[]`, `Client[]`, and `Payment[]` with an `exportedAt` timestamp.
 - **job.ts** — `Job` interface: groups multiple appointments, expenses, and employees under one client project (id, clientID, name, description, status: `'active' | 'completed'`, createdDate). See `new_features/job.md`.
 - **category.ts** — `Category` interface: a tag applied to appointments (id, name).
+- **expense.ts** — `Expense` interface: an arbitrary job-cost line item (e.g. materials) logged against an appointment (id, appointmentID, description, amount). Distinct from `Appointment.expense` (the employee payout field). See `new_features/expenses.md`.

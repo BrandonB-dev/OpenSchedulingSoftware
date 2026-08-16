@@ -11,6 +11,7 @@ import Modal from "../modal/modal";
 import Button from "../basic/button/button";
 import AppointmentInfo from "./appointmentInfo";
 import AppointmentFinished from "../confirmationModals/appointmentFinished";
+import ExpensesList from "../expensesList/expensesList";
 
 interface UpdateAppointmentProps {
   isModalOpen: boolean;
@@ -166,6 +167,9 @@ function UpdateAppointmentForm({
               selectedJob={selectedJob}
               setSelectedJob={setSelectedJob}
             />
+            <div className="md:col-span-2">
+              <ExpensesList appointmentID={appointment.id} />
+            </div>
             {/* Added md:col-span-2 here */}
             <div className="mt-3 flex flex-col justify-end gap-2.5 md:col-span-2">
               <Button label="Update Appointment" onClick={() => updateAppointment()} />

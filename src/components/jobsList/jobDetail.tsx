@@ -1,6 +1,12 @@
-import { ChevronLeft, FileText, User } from "lucide-react"
+import { useMemo } from "react"
+import { ChevronLeft, FileText, User, DollarSign, Package, UserCheck, CreditCard, Wallet } from "lucide-react"
 import { useJobStore } from "../../stores/useJobStore"
 import { useClientStore } from "../../stores/useClientStore"
+import { useAppointmentStore } from "../../stores/useAppointmentStore"
+import { useExpenseStore } from "../../stores/useExpenseStore"
+import { usePaymentStore } from "../../stores/usePaymentStore"
+import JobAppointmentCard from "../basic/cards/jobAppointmentCard"
+import FinanceCard from "../basic/cards/financeCard"
 import UpdateJob from "./updateJob"
 import DeleteJob from "./deleteJob"
 import { cn } from "../../lib/utils"
@@ -13,6 +19,34 @@ export default function JobDetail({ jobID }: JobDetailProps) {
   const job = useJobStore((s) => s.jobs.find((j) => j.id === jobID))
   const setSelectedJobID = useJobStore((s) => s.setSelectedJobID)
   const client = useClientStore((s) => s.clients.find((c) => c.id === job?.clientID))
+
+  const appointmentsState = useAppointmentStore((s) => s.appointments)
+  const expensesState = useExpenseStore((s) => s.expenses)
+  const paymentsState = usePaymentStore((s) => s.payments)
+
+  const jobAppointments = useMemo(
+    () => useAppointmentStore.getState().getAppointmentsByJobID(jobID),
+    [appointmentsState, jobID]
+  )
+
+  const totals = useMemo(() => {
+    const getExpensesByAppointmentID = useExpenseStore.getState().getExpensesByAppointmentID
+    const totalCharged = jobAppointments.reduce((sum, a) => sum + a.charge, 0)
+    const totalEmployeePayout = jobAppointments.reduce((sum, a) => sum + a.expense, 0)
+    const totalMaterialExpenses = jobAppointments.reduce(
+      (sum, a) => sum + getExpensesByAppointmentID(a.id).reduce((s, e) => s + e.amount, 0),
+      0
+    )
+    const totalCollected = jobAppointments
+      .filter((a) => paymentsState.some((p) => p.appointmentID === a.id && p.paymentReceived))
+      .reduce((sum, a) => sum + a.charge, 0)
+    const paidOutToEmployee = jobAppointments
+      .filter((a) => paymentsState.some((p) => p.appointmentID === a.id && p.expensesPaid))
+      .reduce((sum, a) => sum + a.expense, 0)
+    const net = totalCollected - totalMaterialExpenses - paidOutToEmployee
+
+    return { totalCharged, totalEmployeePayout, totalMaterialExpenses, totalCollected, net }
+  }, [jobAppointments, paymentsState, expensesState])
 
   // deleteJob clears a matching selectedJobID in the same store update, so
   // this only guards the brief re-render between that state change and
@@ -65,7 +99,31 @@ export default function JobDetail({ jobID }: JobDetailProps) {
         </div>
       )}
 
-      <div className="mt-2 flex gap-2.5 border-t border-border pt-4 [&>*]:flex-1">
+      <div className="mt-2 flex flex-col gap-2.5 border-t border-border pt-4">
+        <span className="text-[10px] font-bold tracking-wider text-primary uppercase">Financials</span>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+          <FinanceCard label="Total Charged" amount={totals.totalCharged} colorScheme="rose" icon={<DollarSign />} />
+          <FinanceCard label="Material Expenses" amount={totals.totalMaterialExpenses} colorScheme="blush" icon={<Package />} />
+          <FinanceCard label="Employee Payout" amount={totals.totalEmployeePayout} colorScheme="plum" icon={<UserCheck />} />
+          <FinanceCard label="Total Collected" amount={totals.totalCollected} colorScheme="berry" icon={<CreditCard />} />
+          <FinanceCard label="Net" amount={totals.net} colorScheme="coral" icon={<Wallet />} />
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-2.5 border-t border-border pt-4">
+        <span className="text-[10px] font-bold tracking-wider text-primary uppercase">Appointments</span>
+        {jobAppointments.length === 0 ? (
+          <p className="m-0 text-sm text-muted-foreground">No appointments assigned to this job yet.</p>
+        ) : (
+          <div className="flex flex-col gap-2.5">
+            {jobAppointments.map((appointment) => (
+              <JobAppointmentCard key={appointment.id} appointment={appointment} />
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div className="flex gap-2.5 border-t border-border pt-4 [&>*]:flex-1">
         <UpdateJob job={job} />
         <DeleteJob jobID={job.id} />
       </div>

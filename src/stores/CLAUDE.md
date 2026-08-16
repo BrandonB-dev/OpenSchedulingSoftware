@@ -34,6 +34,8 @@ All three stores follow the same CRUD shape: `set*` (bulk replace), `create*` (a
 
 - **useJobStore.ts** — Manages `Job[]` (see [Job](../definitions/CLAUDE.md)). State: `jobs`, `selectedJobID`. Persist key: `"jobs"`. Same CRUD shape as `useClientStore.ts`. `deleteJob` returns `Result<void>`: refuses with `{ kind: 'conflict' }` if any appointment's `jobID` still references it.
 
+- **useExpenseStore.ts** — Manages `Expense[]` (see [Expense](../definitions/CLAUDE.md)). State: `expenses`. Persist key: `"expenses"`. Same CRUD shape as `useClientStore.ts`, plus two derived selectors: `getExpensesByAppointmentID(appointmentID)` and `getTotalExpensesForAppointment(appointmentID)` (sum of `amount`).
+
 ## Gotchas
 
 - Cross-store reads use `useXStore.getState()` inside actions/selectors rather than the `useXStore()` hook, since these run outside React render (needed to avoid stale closures / extra re-renders). Components calling these derived selectors should still wrap them in `useMemo` keyed on the relevant store's state, as done in [financePage.tsx](../pages/CLAUDE.md) and [appointmentsPage.tsx](../pages/CLAUDE.md) — the selector functions themselves aren't reactive subscriptions.
