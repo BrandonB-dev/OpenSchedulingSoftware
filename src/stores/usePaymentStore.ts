@@ -3,8 +3,10 @@ import { persist } from 'zustand/middleware'
 import type { Payment } from '../definitions/payments'
 import type { Appointment } from '../definitions/appointments'
 import type { Client } from '../definitions/client'
+import type { Employee } from '../definitions/employee'
 import { useAppointmentStore } from './useAppointmentStore'
 import { useClientStore } from './useClientStore'
+import { useEmployeeStore } from './useEmployeeStore'
 
 type NewPayment = Omit<Payment, 'id'>
 
@@ -39,6 +41,7 @@ interface PaymentState {
   getTotalNeededToPayOut: () => number
   getTotalCollected: () => number
   getTotalNetAfterPayouts: () => number
+  getAmountOwedByEmployee: () => { employee: Employee; amount: number }[]
 
   payHelper: (appointmentID: string) => void
 }
@@ -205,6 +208,35 @@ export const usePaymentStore = create<PaymentState>()(
             return sum + (appt?.expense ?? 0)
           }, 0)
         return get().getTotalCollected() - paidOut
+      },
+
+      getAmountOwedByEmployee: () => {
+        const { appointments } = useAppointmentStore.getState()
+        const { employees } = useEmployeeStore.getState()
+
+        const amountByEmployeeID = new Map<string, number>()
+
+        get()
+          .payments.filter((p) => !p.expensesPaid)
+          .forEach((p) => {
+            const appt = appointments.find((a) => a.id === p.appointmentID)
+            if (!appt || appt.employeeIDs.length === 0) return
+
+            const share = appt.expense / appt.employeeIDs.length
+            appt.employeeIDs.forEach((employeeID) => {
+              amountByEmployeeID.set(
+                employeeID,
+                (amountByEmployeeID.get(employeeID) ?? 0) + share
+              )
+            })
+          })
+
+        return Array.from(amountByEmployeeID.entries())
+          .map(([employeeID, amount]) => {
+            const employee = employees.find((e) => e.id === employeeID)
+            return employee ? { employee, amount } : null
+          })
+          .filter((r): r is { employee: Employee; amount: number } => r !== null)
       },
 
       payHelper: (appointmentID) => {

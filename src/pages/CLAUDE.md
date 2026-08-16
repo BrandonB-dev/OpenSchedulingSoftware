@@ -17,7 +17,7 @@ Top-level route/page components, one per tab in the app's nav bar, plus the shar
   - Functional Purpose: Renders the `EmployeesList` and a `CreateEmployee` form.
   - Contextual Purpose: Who works for the operator — separate from client data, mirrors `clientsPage.tsx`'s shape.
 - **financePage.tsx** 
-  - Functional Purpose: Summary cards (this week/month totals, total owed, payout owed) sourced from `usePaymentStore`, plus a `CollectionsList` of people who owe money.
+  - Functional Purpose: Summary cards (this week/month totals, total owed, payout owed) sourced from `usePaymentStore`, an "Owed to Employees" section (one `FinanceCard` per employee via `getAmountOwedByEmployee()`), plus a `CollectionsList` of people who owe money.
   - Contextual Purpose: Contains any financial information the user needs to see. 
 - **settingsPage.tsx**
   - Functional Purpose: Hosts `GoogleAccount` (connect/backup/restore/disconnect Google Drive), `ImportExportData` (local JSON export/import), and the "Delete Data" action — moved here from `appointmentsPage.tsx`.

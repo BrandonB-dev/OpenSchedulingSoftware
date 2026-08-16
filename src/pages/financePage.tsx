@@ -32,6 +32,10 @@ export default function FinancePage() {
     () => usePaymentStore.getState().getTotalNetAfterPayouts(),
     [payments]
   )
+  const owedByEmployee = useMemo(
+    () => usePaymentStore.getState().getAmountOwedByEmployee(),
+    [payments]
+  )
 
   return (
     <div className="mx-auto w-full max-w-[920px] px-4 pt-5 pb-[calc(44px+env(safe-area-inset-bottom))] pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))] text-foreground sm:px-5 sm:pt-7 sm:pb-14">
@@ -94,6 +98,25 @@ export default function FinancePage() {
             }
           />
         </div>
+      </section>
+
+      <section className="mt-6 sm:mt-7">
+        <span className="mb-2.5 block text-xs font-bold tracking-wider text-primary uppercase">Owed to Employees</span>
+        {owedByEmployee.length === 0 ? (
+          <p className="text-sm text-muted-foreground">No employee payouts owed.</p>
+        ) : (
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+            {owedByEmployee.map(({ employee, amount }) => (
+              <FinanceCard
+                key={employee.id}
+                label={employee.name}
+                amount={amount}
+                colorScheme="plum"
+                icon={<UserCheck />}
+              />
+            ))}
+          </div>
+        )}
       </section>
 
       <section className="mt-6 sm:mt-7">

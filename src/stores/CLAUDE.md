@@ -30,6 +30,7 @@ All three stores follow the same CRUD shape: `set*` (bulk replace), `create*` (a
   - `getTotalNeededToPayOut()` — sum of `expense` across payments not yet paid out.
   - `getTotalCollected()` — all-time sum of `charge` across all received payments (`totalReceivedSince` with an unbounded `since`).
   - `getTotalNetAfterPayouts()` — `getTotalCollected()` minus the sum of `expense` across payments where `expensesPaid` is true (independent of `paymentReceived`, matching `getTotalNeededToPayOut()`'s filter shape).
+  - `getAmountOwedByEmployee()` — for payments where `expensesPaid` is false, joins each payment's appointment to `useEmployeeStore`, splitting the appointment's `expense` evenly across its `employeeIDs` and summing per employee; appointments with no `employeeIDs` contribute nothing. Returns `{ employee, amount }[]`.
   - `payHelper(appointmentID)` — marks a payment's `expensesPaid` true by matching `appointmentID` (note: doesn't touch `paymentReceived`).
 
 - **useJobStore.ts** — Manages `Job[]` (see [Job](../definitions/CLAUDE.md)). State: `jobs`, `selectedJobID`. Persist key: `"jobs"`. Same CRUD shape as `useClientStore.ts`. `deleteJob` returns `Result<void>`: refuses with `{ kind: 'conflict' }` if any appointment's `jobID` still references it.

@@ -2,8 +2,9 @@ import { describe, it, expect, beforeEach } from 'vitest'
 import { usePaymentStore } from './usePaymentStore'
 import { useAppointmentStore } from './useAppointmentStore'
 import { useClientStore } from './useClientStore'
+import { useEmployeeStore } from './useEmployeeStore'
 import { resetStores } from '../testUtils/resetStores'
-import { buildClient, buildAppointment, buildPayment } from '../testUtils/builders'
+import { buildClient, buildAppointment, buildPayment, buildEmployee } from '../testUtils/builders'
 
 describe('usePaymentStore', () => {
   beforeEach(() => resetStores())
@@ -159,6 +160,70 @@ describe('usePaymentStore', () => {
       // paid out: A and C have expensesPaid -> 25 + 40 = 65 (B's expense isn't paid out yet)
       expect(store.getTotalCollected()).toBe(300)
       expect(store.getTotalNetAfterPayouts()).toBe(300 - 65)
+    })
+  })
+
+  describe('getAmountOwedByEmployee', () => {
+    it('returns an empty array when there are no unpaid payments', () => {
+      expect(usePaymentStore.getState().getAmountOwedByEmployee()).toEqual([])
+    })
+
+    it('attributes the full expense to a single employee on an appointment', () => {
+      const employee = buildEmployee({ name: 'Alex' })
+      const appointment = buildAppointment({ employeeIDs: [employee.id], expense: 40 })
+      const payment = buildPayment({ appointmentID: appointment.id, expensesPaid: false })
+
+      useEmployeeStore.setState({ employees: [employee] })
+      useAppointmentStore.setState({ appointments: [appointment] })
+      usePaymentStore.setState({ payments: [payment] })
+
+      const result = usePaymentStore.getState().getAmountOwedByEmployee()
+
+      expect(result).toHaveLength(1)
+      expect(result[0].employee.id).toBe(employee.id)
+      expect(result[0].amount).toBe(40)
+    })
+
+    it('splits the expense evenly across multiple employees on an appointment', () => {
+      const employeeA = buildEmployee({ name: 'Alex' })
+      const employeeB = buildEmployee({ name: 'Bailey' })
+      const appointment = buildAppointment({
+        employeeIDs: [employeeA.id, employeeB.id],
+        expense: 50,
+      })
+      const payment = buildPayment({ appointmentID: appointment.id, expensesPaid: false })
+
+      useEmployeeStore.setState({ employees: [employeeA, employeeB] })
+      useAppointmentStore.setState({ appointments: [appointment] })
+      usePaymentStore.setState({ payments: [payment] })
+
+      const result = usePaymentStore.getState().getAmountOwedByEmployee()
+
+      expect(result).toHaveLength(2)
+      expect(result.find((r) => r.employee.id === employeeA.id)?.amount).toBe(25)
+      expect(result.find((r) => r.employee.id === employeeB.id)?.amount).toBe(25)
+    })
+
+    it('excludes an appointment with no employees assigned', () => {
+      const appointment = buildAppointment({ employeeIDs: [], expense: 40 })
+      const payment = buildPayment({ appointmentID: appointment.id, expensesPaid: false })
+
+      useAppointmentStore.setState({ appointments: [appointment] })
+      usePaymentStore.setState({ payments: [payment] })
+
+      expect(usePaymentStore.getState().getAmountOwedByEmployee()).toEqual([])
+    })
+
+    it('excludes payments that have already been paid out', () => {
+      const employee = buildEmployee()
+      const appointment = buildAppointment({ employeeIDs: [employee.id], expense: 40 })
+      const payment = buildPayment({ appointmentID: appointment.id, expensesPaid: true })
+
+      useEmployeeStore.setState({ employees: [employee] })
+      useAppointmentStore.setState({ appointments: [appointment] })
+      usePaymentStore.setState({ payments: [payment] })
+
+      expect(usePaymentStore.getState().getAmountOwedByEmployee()).toEqual([])
     })
   })
 })
