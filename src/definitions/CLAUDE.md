@@ -8,3 +8,4 @@ TypeScript type definitions (interfaces) for the app's core domain models. No lo
 - **appointments.ts** — `Appointment` interface: a scheduled cleaning job (id, clientID, date, start/end time, charge, expense, show flag).
 - **payments.ts** — `Payment` interface: payment record tied to an appointment (id, date received, method, paymentReceived/expensesPaid flags, appointmentID).
 - **backupData.ts** — `BackupData` interface: the shape of a full data export/backup, aggregating `Appointment[]`, `Client[]`, and `Payment[]` with an `exportedAt` timestamp.
+- **expense.ts** — `Expense` interface: an arbitrary job-cost line item (id, description, amount) tied to an appointment via `appointmentID`. Distinct from `Appointment.expense`, which is the employee payout field.
